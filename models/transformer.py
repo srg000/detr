@@ -151,14 +151,22 @@ class TransformerEncoderLayer(nn.Module):
                      src_mask: Optional[Tensor] = None,
                      src_key_padding_mask: Optional[Tensor] = None,
                      pos: Optional[Tensor] = None):
+        # 将图像特征src 和 位置信息pos进行嵌入，得到q和k
         q = k = self.with_pos_embed(src, pos)
+        # 使用self_attn模块对q和k进行自注意力计算，得到src2
         src2 = self.self_attn(q, k, value=src, attn_mask=src_mask,
                               key_padding_mask=src_key_padding_mask)[0]
+        # 对src2进行dropout操作，使用残差结构
         src = src + self.dropout1(src2)
+        # 对src进行归一化操作
         src = self.norm1(src)
+        # FFN模块：对src进行线性变换、激活函数和dropout操作，得到src2
         src2 = self.linear2(self.dropout(self.activation(self.linear1(src))))
+        # 对src2进行dropout操作，使用残差结构
         src = src + self.dropout2(src2)
+        # 对src进行归一化操作
         src = self.norm2(src)
+        # 返回最终的src
         return src
 
     def forward_pre(self, src,
@@ -216,19 +224,27 @@ class TransformerDecoderLayer(nn.Module):
                      memory_key_padding_mask: Optional[Tensor] = None,
                      pos: Optional[Tensor] = None,
                      query_pos: Optional[Tensor] = None):
+        # 对queries(tgt) 和 object queries(query_pos) 进行位置嵌入，得到q和k
         q = k = self.with_pos_embed(tgt, query_pos)
+        # 第一个自注意力：对q、k进行自注意力计算，得到tgt2
         tgt2 = self.self_attn(q, k, value=tgt, attn_mask=tgt_mask,
                               key_padding_mask=tgt_key_padding_mask)[0]
+        # 对tgt2进行dropout操作，使用残差结构
         tgt = tgt + self.dropout1(tgt2)
+        # 对tgt进行归一化操作
         tgt = self.norm1(tgt)
+        # 第二个自注意力：q是queries 和 object queries进行位置嵌入；k是 encoder 输出和位置编码进行位置嵌入；v是encoder输出向量
         tgt2 = self.multihead_attn(query=self.with_pos_embed(tgt, query_pos),
                                    key=self.with_pos_embed(memory, pos),
                                    value=memory, attn_mask=memory_mask,
                                    key_padding_mask=memory_key_padding_mask)[0]
         tgt = tgt + self.dropout2(tgt2)
         tgt = self.norm2(tgt)
+        # FFN模块：对tgt进行线性变换、激活函数和dropout操作，得到tgt2
         tgt2 = self.linear2(self.dropout(self.activation(self.linear1(tgt))))
+        # 对tgt2进行dropout操作，使用残差结构
         tgt = tgt + self.dropout3(tgt2)
+        # 对tgt进行归一化操作
         tgt = self.norm3(tgt)
         return tgt
 

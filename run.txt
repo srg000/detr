@@ -1,0 +1,5 @@
+1、根据官网提供的预训练权重detr-r50-e632da11.pth来进行 训练。coco数据集在cocodataset文件夹下；训练完的权重保存在outputs文件夹
+python main.py --coco_path cocodataset --epochs 15 --lr=1e-4 --batch_size=2 --num_workers=4 --output_dir="outputs" --resume="detr-r50-e632da11.pth"
+
+
+2、执行test.py 脚本
